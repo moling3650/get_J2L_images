@@ -9,7 +9,8 @@
 # 使用说明
 - 确保python和requests已经安装好
 - 确保梯子可以爬出墙外
-- 运行`python run.py code start stop`  
+- 运行`python get_images.py code [start] [stop] [outtime]`  
   - code: 神秘代码，此参数不可缺少
   - start: 下载图片的起始id，默认是`1`
   - stop: 下载图片的终止id，默认是`start + 10`
+  - outtime: 失败N次后退出，默认是`10`
