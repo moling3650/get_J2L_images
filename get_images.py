@@ -13,11 +13,20 @@ import requests
 logging.basicConfig(level=logging.INFO)
 URL = 'http://www.javli6.com/cn/vl_searchbyid.php?keyword={}'
 
-def get_url_template(code, idx):
-    url = URL.format(code + str(idx))
-    logging.info('search link: ' + url)
 
-    r = requests.get(url)
+def get_valid_value(num_string):
+    try:
+        return max(int(num_string), 1)
+    except ValueError:
+        return 1
+
+
+def get_url_template(code, idx):
+
+    link = URL.format(code + str(idx))
+    logging.info('Search link: ' + link)
+
+    r = requests.get(link)
     jpg_url = re.search(r'http://.*?/mono/movie/adult/.*?jpg', r.text)
     if not jpg_url:
         return None
@@ -29,26 +38,27 @@ def get_url_template(code, idx):
     return re.sub(code + '\d{3}', code + '{0:0>3}', url, 2)
 
 
-def download_images(code, start=1, stop=None):
-    logging.info('start...')
+def download_images(code, start=1, stop=None, outtime=10):
+    logging.info('Start...')
     code = code.upper()
-    start = int(start)
-    stop = start + 10 if (stop is None) else int(stop)
+    start = get_valid_value(start)
+    stop = start + 10 if (stop is None) else get_valid_value(stop) + 1
+    outtime = get_valid_value(outtime)
 
     url = get_url_template(code.lower(), start)
     if url is None:
         exit()
-    logging.info('url template => ' + url)
+    logging.info('Url template => ' + url)
 
     # if directory is not exists, make directory
-    image_dir = os.path.join(os.curdir, code)
-    if not os.path.isdir(image_dir):
+    DL_dir = os.path.join(os.curdir, code)
+    if not os.path.isdir(DL_dir):
         os.mkdir(code)
-    logging.info('download floder => ' + image_dir)
+    logging.info('Download floder => ' + DL_dir)
 
     for idx in range(start, stop):
         # check file exists
-        file = os.path.join(image_dir, '{:0>3}.jpg'.format(idx))
+        file = os.path.join(DL_dir, '{:0>3}.jpg'.format(idx))
         if os.path.isfile(file):
             continue
 
@@ -56,15 +66,18 @@ def download_images(code, start=1, stop=None):
         r = requests.get(image_url)
         # check status code
         if r.status_code != 200:
-            logging.info('request status code is %s!' % r.status_code)
+            logging.info('Request status code is %s!' % r.status_code)
             break
         # check redirect
         if r.url != image_url:
             new_url = get_url_template(code.lower(), idx)
             if new_url is None:
+                outtime -= 1
+                if outtime == 0:
+                    break
                 continue
             url = new_url
-            logging.info('new url template => ' + url)
+            logging.info('New url template => ' + url)
             image_url = url.format(idx)
             r = requests.get(image_url)
         # download the file
@@ -75,10 +88,10 @@ def download_images(code, start=1, stop=None):
     logging.info('Done!')
 
 if __name__ == '__main__':
+
     argv = sys.argv[1:]
     if not argv:
-        print('Usage: ./run.py code start=1 stop=start+10')
+        print('Usage: ./get_images.py code [start] [stop] [outtime]')
         exit()
-
-    kw = dict(zip(['code', 'start', 'stop'], argv))
+    kw = dict(zip(['code', 'start', 'stop', 'outtime'], argv))
     download_images(**kw)
