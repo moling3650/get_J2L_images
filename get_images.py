@@ -12,7 +12,7 @@ import logging
 import requests
 
 logging.basicConfig(level=logging.INFO)
-SEARCH_URL = 'http://www.javli6.com/cn/vl_searchbyid.php?keyword={}'
+SEARCH_URL = 'http://www.jav11b.com/cn/vl_searchbyid.php?keyword={}'
 
 
 def get_valid_value(page_str):
